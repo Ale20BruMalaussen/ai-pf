@@ -1,8 +1,8 @@
 {
-    "project_name": "39 Bus New England System",
+    "project_name": "IEEE 39 fake grid forming",
     "grid_name": "Grid",
 	"out_of_service": {"ElmGenstat": []},
-	"synch_mach": {"G 02": {"typ_id.h": 4.329}},
+	"synch_mach": {"Power plan 11": {"typ_id.h": 166.67}},
 	"coiref": "element",
-	"outdir": "D:\\POLIMI\\AI stable power\\39 New England\\Prova"
+	"outdir": "D:\\POLIMI\\AI stable power\\39 New England\\risultati fake grid forming alta inerzia"
 }

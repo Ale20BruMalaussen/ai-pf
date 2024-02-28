@@ -10,7 +10,7 @@ import numpy as np
 from numpy.random import RandomState, SeedSequence, MT19937
 from scipy.optimize import bisect
 
-powerfactory_path = r'C:\Program Files\DIgSILENT\PowerFactory 2020 SP4\Python\3.8'
+powerfactory_path = r'C:\Program Files\DIgSILENT\PowerFactory 2020 SP4\Python\3.11'
 if powerfactory_path not in sys.path:
     sys.path.append(powerfactory_path)
 import powerfactory as pf
