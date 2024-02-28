@@ -21,8 +21,7 @@ from pfcommon import OU, get_simulation_time, get_simulation_variables, \
 __all__ = ['compute_fourier_coeffs']
 
 progname = os.path.basename(sys.argv[0])
-sys.path.append("C:\\Program Files\\DIgSILENT\\PowerFactory 2023\\Python\\3.11")
-
+sys.path.append("C:\Program Files\\DIgSILENT\\PowerFactory 2023 SP5\\Python\\3.9")
 
 def compute_fourier_coeffs(F, time, speed, mu=10):
     n_F = len(F)
@@ -121,6 +120,7 @@ def _find_in_contents(container, obj_name):
 def _activate_project(project_name, verbose=False):   
     ### Activate the project
     err = PF_APP.ActivateProject(project_name)
+    print(project_name)
     if err:
         raise Exception(f'Cannot activate project {project_name}.')
     if verbose: print(f'Activated project "{project_name}".')
@@ -568,211 +568,12 @@ class OULoad(TimeVaryingLoad):
                               OU(dt, Q[0], Q[1], tau[1], n_samples, random_state=self.rs),
                               verbose)
 
-
-############################################################
-###                    TRANSIENT                         ###
-############################################################
-
-
-def run_tran():
-    
-    def usage(exit_code=None):
-        print(f'usage: {progname} tran [-f | --force] [-o | --outfile <filename>]')
-        print( '       ' + ' ' * len(progname) + '      [-v | --verbose <level>] [-m | --email] config_file')
-        if exit_code is not None:
-            sys.exit(exit_code)
-            
-    force = False
-    outfile = None
-    verbosity_level = 1
-    send_email = False
-
-    i = 2
-    n_args = len(sys.argv)
-    while i < n_args:
-        arg = sys.argv[i]
-        if arg in ('-h','--help'):
-            usage(0)
-        elif arg in ('-f', '--force'):
-            force = True
-        elif arg in ('-o', '--outfile'):
-            i += 1
-            outfile = sys.argv[i]
-        elif arg in ('-v', '--verbose'):
-            i += 1
-            verbosity_level = int(sys.argv[i])
-        elif arg in ('-m', '--email'):
-            send_email = True
-        elif arg[0] == '-':
-            print(f'{progname}: unknown option `{arg}`')
-            sys.exit(1)
-        else:
-            break
-        i += 1
-    
-    if i == n_args:
-        print('You must specify a configuration file')
-        sys.exit(1)
-    elif i == n_args-1:
-        config_file = sys.argv[i]
-    else:
-        print('Arguments after configuration file name are not allowed')
-        sys.exit(1)
-
-    if not os.path.isfile(config_file):
-        print('{}: {}: no such file.'.format(progname, config_file))
-        sys.exit(1)
-    config = json.load(open(config_file, 'r'))
-    if 'coiref' not in config:
-        config['coiref'] = 'element'
-
-    project_name = config['project_name']
-    
-    if outfile is None:
-        outfile = '{}_tran.npz'.format(project_name)
-
-    if os.path.isfile(outfile) and not force:
-        print(f'{progname}: output file `{outfile}` exists: use -f to overwrite.')
-        sys.exit(1)
-
-    rs,seed = _get_random_state(config)
-    if verbosity_level > 0: print(f'Seed: {seed}.')
-
-    PF_db_name = config['db_name'] if 'db_name' in config else 'zampa'
-    project_name = '\\' + PF_db_name + '\\' + project_name
-    project = _activate_project(project_name, verbosity_level>0)
-    _print_network_info()
-    
-    found = False
-    for grid in PF_APP.GetCalcRelevantObjects('*.ElmNet'):
-        if grid.loc_name == config['grid_name']:
-            if verbosity_level > 0:
-                print('Found grid named `{}`.'.format(config['grid_name']))
-            found = True
-            break
-    if not found:
-        print('Cannot find a grid named `{}`.'.format(config['grid_name']))
-        sys.exit(1)
-
-    def check_matches(load, patterns, limits, out_of_service):
-        if all([re.match(pattern, load.loc_name) is None for pattern in patterns]) or \
-            load.loc_name in out_of_service:
-            return False
-        p,q = load.plini, load.qlini
-        if (p >= limits['P'][0] and p <= limits['P'][1]) or \
-            (q >= limits['Q'][0] and q <= limits['Q'][1]):
-               return True
-        return False
-
-    loads = list(filter(lambda load: check_matches(load,
-                                                   config['stoch_loads'],
-                                                   config['limits'],
-                                                   config['out_of_service']['ElmLod'] \
-                                                       if 'ElmLod' in config['out_of_service'] else []),
-                        _get_objects('*.ElmLod')))
-    n_loads = len(loads)
-
-    if verbosity_level > 0:
-        if len(loads) == 1:
-            print('One load matches the name pattern and has either P or Q within the limits.')
-        else:
-            print(f'{len(loads)} loads match the name pattern and have either P or Q within the limits.')
-        if verbosity_level > 2:
-            print('{:^5s} {:<30s} {:^10s} {:^10s}'.format('#', 'Name', 'P [MW]', 'Q [MVAr]'))
-            print('=' * 58)
-            for i,load in enumerate(loads):
-                print('[{:3d}] {:30s} {:10.3f} {:10.3f}'.format(i+1, load.loc_name, load.plini, load.qlini))
-
-    seeds = rs.randint(0, 1000000, size=n_loads)
-    stoch_loads = [OULoad(ld, PF_APP, grid, config['library_name'],
-                          config['user_models_name'], config['frame_name'],
-                          outdir='stoch_loads', seed=sd)
-                   for ld,sd in zip(loads,seeds)]
-
-    dt = config['dt']
-    tstop = config['tstop']
-    n_samples = int(np.ceil(tstop / dt)) + 1
-    tau = [config['tau']['P'], config['tau']['Q']]
-    for i,(load,stoch_load) in enumerate(zip(loads, stoch_loads)):
-        P = load.plini, np.abs(load.plini)*config['sigma']['P']
-        Q = load.qlini, np.abs(load.qlini)*config['sigma']['Q']
-        msg = 'Writing load file {:d}/{:d}...'.format(i+1, n_loads)
-        sys.stdout.write(msg)
-        sys.stdout.flush()
-        stoch_load.write_to_file(dt, P, Q, n_samples, tau, verbosity_level>2)
-        if i < n_loads-1:
-            sys.stdout.write('\b' * len(msg))
-    sys.stdout.write('\n')
-    
-    PF1, PF2 = _apply_configuration(config, verbosity_level)
-
-    Htot,Etot,Mtot,Stot,H,S,J,Pload,Qload,Psm,Qsm,Psg,Qsg = \
-        _compute_measures(grid.frnom, verbosity_level>0)
-
-    # for SM in _get_objects('*.ElmSym'):
-    #     bus = SM.bus1.cterm
-    #     if '___BUS___' not in bus.loc_name:
-    #         equiv_terms = bus.GetEquivalentTerminals()
-    #         busbars = [bb for bb in bus.GetConnectedMainBuses() if bb in equiv_terms]
-    #         if len(busbars) == 1:
-    #             sys.stdout.write('"{}",'.format(busbars[0].loc_name))
-    #         else:
-    #             import pdb
-    #             pdb.set_trace()
-    #     else:
-    #         sys.stdout.write('"{}",'.format(bus.loc_name))
-        
-    try:
-        inc = _IC(dt, coiref=config['coiref'], verbose=verbosity_level>1)
-        res, _ = _set_vars_to_save(config['record'], verbosity_level>1)
-        sim,dur,err = _tran(tstop, verbosity_level>1)
-
-        interval = (0, None)
-        time,data = _get_data(res, config['record'], project, interval, dt, verbosity_level>1)
-        attributes, device_names, ref_SMs = _get_attributes(config['record'], verbosity_level>2)
-        blob = {'config': config,
-                'seed': seed,
-                'OU_seeds': seeds,
-                'inertia': Htot,
-                'energy': Etot,
-                'momentum': Mtot,
-                'Stot': Stot,
-                'H': H, 'S': S, 'J': J,
-                'Psm': Psm, 'Qsm': Qsm,
-                'Psg': Psg, 'Qsg': Qsg,
-                'Pload': Pload, 'Qload': Qload,
-                'PF_with_slack': PF1,
-                'PF_without_slack': PF2,
-                'time': np.array(time, dtype=object),
-                'data': data,
-                'attributes': attributes,
-                'device_names': device_names,
-                'ref_SMs': ref_SMs}
-    
-        np.savez_compressed(outfile, **blob)
-
-    except Exception as inst:
-        print('Failed to run transient simulation:')
-        print(inst)
- 
-    for load in stoch_loads:
-        load.clean(verbosity_level>2)
-
-    _restore_network_state(verbosity_level>2)
-
-    if send_email:
-        ### send an email to let the recipients know that the job has finished
-        with open(config_file, 'r') as fid:
-            _send_email(subject=f'PowerFactory job finished - data saved to {outfile}',
-                        content=fid.read())
-
-
 ############################################################
 ###                   AC ANALYSIS                        ###
 ############################################################
 
 
-def run_AC_analysis():
+def run_AC_analysis(config_file):
     
     def usage(exit_code=None):
         print(f'usage: {progname} AC [-f | --force] [-o | --outfile <filename>] [-v | --verbose <level>] config_file')
@@ -781,37 +582,8 @@ def run_AC_analysis():
             
     force = False
     outfile = None
-    verbosity_level = 1
+    verbosity_level = 0
 
-    i = 2
-    n_args = len(sys.argv)
-    while i < n_args:
-        arg = sys.argv[i]
-        if arg in ('-h','--help'):
-            usage(0)
-        elif arg in ('-f', '--force'):
-            force = True
-        elif arg in ('-o', '--outfile'):
-            i += 1
-            outfile = sys.argv[i]
-        elif arg in ('-v', '--verbose'):
-            i += 1
-            verbosity_level = int(sys.argv[i])
-        elif arg[0] == '-':
-            print(f'{progname}: unknown option `{arg}`')
-            sys.exit(1)
-        else:
-            break
-        i += 1
-    
-    if i == n_args:
-        print('You must specify a configuration file')
-        sys.exit(1)
-    elif i == n_args-1:
-        config_file = sys.argv[i]
-    else:
-        print('Arguments after project name are not allowed')
-        sys.exit(1)
 
     if not os.path.isfile(config_file):
         print('{}: {}: no such file.'.format(progname, config_file))
@@ -827,16 +599,14 @@ def run_AC_analysis():
     except:
         outdir = '.'
         
-    if outfile is None:
-        outfile = os.path.join(outdir, config['project_name'] + '_AC.npz')
-    if os.path.isfile(outfile) and not force:
-        print(f'{progname}: output file `{outfile}` exists: use -f to overwrite.')
-        sys.exit(1)
 
-    PF_db_name = config['db_name'] if 'db_name' in config else 'zampa'
+    outfile = os.path.join(outdir, config['project_name'] + '_AC.npz')
+
+
+    PF_db_name = config['db_name'] if 'db_name' in config else 'aless'
     project_name = '\\' + PF_db_name + '\\' + config['project_name']
     project = _activate_project(project_name, verbosity_level>0)
-    _print_network_info()
+    #_print_network_info()
 
     # we can't use _find_object because grids do not have an .outserv flag
     found = False
@@ -899,18 +669,6 @@ def run_AC_analysis():
             equiv_terms_names = sorted([term.loc_name for term in equiv_terms])
             bus_equiv_terms[load_buses[load.loc_name]] = equiv_terms_names
 
-        buses = _get_objects('*.ElmTerm')
-        for i,bus in enumerate(buses):
-            equiv_terms = bus.GetEquivalentTerminals()
-            equiv_terms_names = [term.loc_name for term in equiv_terms if term != bus]
-            key = bus.loc_name
-            if key not in bus_equiv_terms:
-                bus_equiv_terms[key] = equiv_terms_names
-            else:
-                for name in equiv_terms_names:
-                    if name not in bus_equiv_terms[key]:
-                        bus_equiv_terms[key].append(name)
-
         A = parse_sparse_matrix_file(os.path.join(outdir, 'Amat.mtl'))
         J = parse_sparse_matrix_file(os.path.join(outdir, 'Jacobian.mtl'))
         cols,var_names,model_names = \
@@ -944,314 +702,7 @@ def run_AC_analysis():
         np.savez_compressed(outfile, **data)
         print('done.')
 
-
-############################################################
-###                 AC TRAN ANALYSIS                     ###
-############################################################
-
-
-def run_AC_tran_analysis():
-    
-    def usage(exit_code=None):
-        print(f'usage: {progname} AC-tran [-f | --force] [-o | --outfile <filename>] [-v | --verbose <level>] config_file')
-        if exit_code is not None:
-            sys.exit(exit_code)
-            
-    force = False
-    outfile = None
-    verbosity_level = 1
-
-    i = 2
-    n_args = len(sys.argv)
-    while i < n_args:
-        arg = sys.argv[i]
-        if arg in ('-h','--help'):
-            usage(0)
-        elif arg in ('-f', '--force'):
-            force = True
-        elif arg in ('-o', '--outfile'):
-            i += 1
-            outfile = sys.argv[i]
-        elif arg in ('-v', '--verbose'):
-            i += 1
-            verbosity_level = int(sys.argv[i])
-        elif arg[0] == '-':
-            print(f'{progname}: unknown option `{arg}`')
-            sys.exit(1)
-        else:
-            break
-        i += 1
-    
-    if i == n_args:
-        print('You must specify a configuration file')
-        sys.exit(1)
-    if i == n_args-1:
-        config_file = sys.argv[i]
-    else:
-        print('Arguments after project name are not allowed')
-        sys.exit(1)
-
-    if not os.path.isfile(config_file):
-        print('{}: {}: no such file.'.format(progname, config_file))
-        sys.exit(1)
-    config = json.load(open(config_file, 'r'))
-
-    F_start, F_stop = config['F_log10']
-    steps_per_decade = config['steps_per_decade']
-    project_name = config['project_name']
-    
-    if outfile is None:
-        outfile = '{}_{}_{}_{}.npz'.format(project_name, F_start, F_stop, steps_per_decade)
-
-    if os.path.isfile(outfile) and not force:
-        print(f'{progname}: output file `{outfile}` exists: use -f to overwrite.')
-        sys.exit(1)
-
-    PF_db_name = config['db_name'] if 'db_name' in config else 'zampa'
-    project_name = '\\' + PF_db_name + '\\' + project_name
-    project = _activate_project(project_name, verbosity_level>0)
-    _print_network_info()
-
-    load = _find_object('*.ElmLod', config['load_name'])
-    if load is None:
-        print('Cannot find a load named `{}`.'.format(config['load_name']))
-        sys.exit(1)
-
-    # we can't use _find_object as above because grids do not have an .outserv flag
-    found = False
-    for grid in PF_APP.GetCalcRelevantObjects('*.ElmNet'):
-        if grid.loc_name == config['grid_name']:
-            if verbosity_level > 0:
-                print('Found grid named `{}`.'.format(config['grid_name']))
-            found = True
-            break
-    if not found:
-        print('Cannot find a grid named `{}`.'.format(config['grid_name']))
-        sys.exit(1)
-
-    PF1, PF2 = _apply_configuration(config, verbosity_level)
-    
-    Htot,Etot,Mtot,Stot,H,S,J,Pload,Qload,Psm,Qsm,Psg,Qsg = \
-        _compute_measures(grid.frnom, verbosity_level>0)
-
-    n = int(F_stop - F_start) * steps_per_decade + 1
-    F = np.logspace(F_start, F_stop, n)    
-    if verbosity_level == 1:
-        from tqdm import tqdm
-        iter_fun = lambda x: tqdm(x, ascii=True, ncols=100)
-    else:
-        iter_fun = lambda x: x
-        
-    sin_load = SinusoidalLoad(load, PF_APP, grid,
-                              config['library_name'],
-                              config['user_models_name'],
-                              config['frame_name'])
-    dt = config['dt']
-    ttran = config['ttran']
-    n_periods = config['n_periods']
-    P = (load.plini, config['dP'] * load.plini)
-    Q = (load.qlini, 0.0)
-    time,data = [], []
-    for f in iter_fun(F):
-        if verbosity_level > 1: print(f'Running simulation with F = {f:g} Hz.')
-        T = 1/f
-        tstop = ttran + n_periods * T
-        dt = min(config['dt'], T/100)
-        n_samples = int(tstop / dt) + 1
-        sin_load.write_to_file(dt, P, Q, f, n_samples, verbosity_level>2)
-        try:
-            inc = _IC(dt, verbosity_level>1)
-            sim,dur,err = _tran(ttran, verbosity_level>1)
-            res, _ = _set_vars_to_save(config['record'], verbosity_level>2)
-            sim,dur,err = _tran(tstop, verbosity_level>1)
-            interval = (0, None) if config['save_transient'] else (ttran, None)
-            t,d = _get_data(res, config['record'], project, interval, dt, verbosity_level>1)
-            time.append(t)
-            data.append(d)
-        except:
-            print('Cannot run simulation')
-
-    if len(time) > 0:
-        attributes, device_names, ref_SMs = _get_attributes(config['record'], verbosity_level>2)
-        blob = {'config': config,
-                'inertia': Htot,
-                'energy': Etot,
-                'momentum': Mtot,
-                'Stot': Stot,
-                'H': H, 'S': S, 'J': J,
-                'Psm': Psm, 'Qsm': Qsm,
-                'Psg': Psg, 'Qsg': Qsg,
-                'Pload': Pload, 'Qload': Qload,
-                'PF_with_slack': PF1,
-                'PF_without_slack': PF2,
-                'F': F,
-                'time': np.array(time, dtype=object),
-                'data': data,
-                'attributes': attributes,
-                'device_names': device_names,
-                'ref_SMs': ref_SMs}    
-        np.savez_compressed(outfile, **blob)
-
-    sin_load.clean(verbosity_level>1)
-
-    _restore_network_state(verbosity_level>2)
-
-    ### send an email to let the recipients know that the job has finished
-    with open(config_file, 'r') as fid:
-        _send_email(subject=f'PowerFactory job finished - data saved to {outfile}',
-                    content=fid.read())
-
-
-############################################################
-###                    LOAD STEP                         ###
-############################################################
-
-def run_load_step_sim():
-
-    def usage(exit_code=None):
-        print(f'usage: {progname} load-step [-f | --force] [-o | --outfile <filename>] [-v | --verbose <level>] config_file')
-        if exit_code is not None:
-            sys.exit(exit_code)
-
-    force = False
-    outfile = None
-    verbosity_level = 1
-
-    i = 2
-    n_args = len(sys.argv)
-    while i < n_args:
-        arg = sys.argv[i]
-        if arg in ('-h','--help'):
-            usage(0)
-        elif arg in ('-f', '--force'):
-            force = True
-        elif arg in ('-o', '--outfile'):
-            i += 1
-            outfile = sys.argv[i]
-        elif arg in ('-v', '--verbose'):
-            i += 1
-            verbosity_level = int(sys.argv[i])
-        elif arg[0] == '-':
-            print(f'{progname}: unknown option `{arg}`')
-            sys.exit(1)
-        else:
-            break
-        i += 1
-    
-    if i == n_args:
-        print('You must specify a configuration file.')
-        sys.exit(1)
-    elif i == n_args-1:
-        config_file = sys.argv[i]
-    else:
-        print('Arguments after project name are not allowed.')
-        sys.exit(1)
-
-    if not os.path.isfile(config_file):
-        print('{}: {}: no such file.'.format(progname, config_file))
-        sys.exit(1)
-    config = json.load(open(config_file, 'r'))
-
-    if outfile is None:
-        outfile = '{}_{}_{}_{}.npz'.format(config['project_name'],
-                                           config['load_name'],
-                                           config['dP'],
-                                           config['dQ'])
-
-    if os.path.isfile(outfile) and not force:
-        print(f'{progname}: output file `{outfile}` exists: use -f to overwrite.')
-        sys.exit(1)
-
-    PF_db_name = config['db_name'] if 'db_name' in config else 'zampa'
-    project_name = '\\' + PF_db_name + '\\' + config['project_name']
-    project = _activate_project(project_name, verbosity_level>0)
-    _print_network_info()
-
-    out_of_service_objects = _turn_off_objects(config['out_of_service'],
-                                               verbosity_level>2)
-    load = _find_object('*.ElmLod', config['load_name'])
-    if load is None:
-        print('Cannot find a load named `{}`.'.format(config['load_name']))
-        sys.exit(1)
-
-    ### create a load event
-    sim_events = PF_APP.GetFromStudyCase('Simulation Events/Fault.IntEvt')
-    load_event = sim_events.CreateObject('EvtLod', '{}_{}'.
-                                         format(load.loc_name, np.random.randint(0, 10000)))
-    if load_event is None:
-        raise Exception('Cannot create load event')
-    load_event.p_target = load
-    load_event.time = config['tstep']
-    load_event.dP = config['dP'] * 100
-    load_event.dQ = config['dQ'] * 100
-    
-    inc = _IC(config['dt'], verbosity_level>1)
-    res,_ = _set_vars_to_save(config['record'], verbosity_level>2)
-    sim,dur,err = _tran(config['tstop'], verbosity_level>1)
-    # setting the load as out of service because for some reason the following
-    # call to .Delete doesn't remove the object from the simulation events
-    load_event.outserv = True
-    load_event.Delete()
-    _turn_on_objects(out_of_service_objects, verbosity_level>2)
-    if err:
-        print('Cannot run transient simulation.')
-        sys.exit(1)
-
-    attributes,device_names, ref_SMs = _get_attributes(config['record'], verbosity_level>2)
-    time,data = _get_data(res, config['record'], project, verbosity_level>1)
-
-    blob = {'config': config,
-            'time': np.array(time, dtype=object),
-            'data': data,
-            'attributes': attributes,
-            'device_names': device_names,
-            'ref_SMs': ref_SMs}
-
-    np.savez_compressed(outfile, **blob)
-
-
-############################################################
-###                         HELP                         ###
-############################################################
-
-
-def help():
-    if len(sys.argv) > 2 and sys.argv[2] in commands:
-        cmd = sys.argv[2]
-        sys.argv = [sys.argv[0], cmd, '-h']
-        commands[cmd]()
-    else:
-        print('Usage: {} <command> [<args>]'.format(progname))
-        print('')
-        print('Available commands are:')
-        print('   tran           Run a transient simulation (with stochastic loads)')
-        print('   AC             Run a frequency scan analysis.')
-        print('   AC-tran        Run a frequency scan analysis using numerical integration.')
-        print('   load-step      Run a load step simulation.')
-        print('')
-        print('Type `{} help <command>` for help about a specific command.'.format(progname))
-
-
-############################################################
-###                         MAIN                         ###
-############################################################
-
-
-# all the commands currently implemented
-commands = {'help': help,
-            'AC': run_AC_analysis,
-            'AC-tran': run_AC_tran_analysis,
-            'load-step': run_load_step_sim,
-            'tran': run_tran}
-
 if __name__ == '__main__':
-    if len(sys.argv) == 1 or sys.argv[1] in ('-h','--help', 'help'):
-        commands['help']()
-        sys.exit(0)
-    if not sys.argv[1] in commands:
-        print('{}: {} is not a recognized command. See `{} --help`.'.
-              format(progname, sys.argv[1], progname))
-        sys.exit(1)
     ### Get the PowerFactory PF_APPlication
     import powerfactory as pf
     global PF_APP
@@ -1259,5 +710,11 @@ if __name__ == '__main__':
     if PF_APP is None:
         print('\nCannot get PowerFactory application.')
         sys.exit(1)
-    PF_APP.ResetCalculation()
-    commands[sys.argv[1]]()
+    simulation_list = os.listdir('config_dataset')
+    i=664
+    
+    for sim in simulation_list[664:]:
+        PF_APP.ResetCalculation()
+        run_AC_analysis('config_dataset\\' + sim)
+        print(i)
+        i+=1
