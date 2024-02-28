@@ -1,0 +1,8 @@
+{
+    "project_name": "39 Bus New England System",
+    "grid_name": "Grid",
+	"out_of_service": {"ElmGenstat": []},
+	"synch_mach": {"G 02": {"typ_id.h": 4.329}},
+	"coiref": "element",
+	"outdir": "D:\\POLIMI\\AI stable power\\39 New England\\Prova"
+}
