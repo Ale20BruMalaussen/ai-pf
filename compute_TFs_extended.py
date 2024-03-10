@@ -1,18 +1,7 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Oct 24 14:42:05 2023
-
-@author: Daniele Linaro
-"""
-
 import os
 import re
 import sys
 import numpy as np
-# from scipy.io import savemat
-# import matplotlib.pyplot as plt
-# import matplotlib
-# import seaborn as sns
 from tqdm import tqdm
 
 progname = os.path.basename(sys.argv[0])
