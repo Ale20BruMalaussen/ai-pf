@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue May 30 11:54:00 2023
-
-@author: Daniele Linaro
-"""
-
 import re
 import os
 import sys
@@ -710,11 +703,14 @@ if __name__ == '__main__':
     if PF_APP is None:
         print('\nCannot get PowerFactory application.')
         sys.exit(1)
-    simulation_list = os.listdir('config_dataset')
-    i=664
-    
-    for sim in simulation_list[664:]:
+
+    config_path = 'C:\\Users\\aless\\Desktop\\inertia step simulations\\config_no_step'
+    simulation_list = os.listdir(config_path)
+  
+    i=0
+    for sim in simulation_list:
         PF_APP.ResetCalculation()
-        run_AC_analysis('config_dataset\\' + sim)
+        path = os.path.join(config_path, sim)
+        run_AC_analysis(path)
         print(i)
         i+=1
