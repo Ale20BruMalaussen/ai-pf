@@ -14,7 +14,9 @@ config = json.load(open(config_file, 'r'))
 for i in range(2,10):
     config['synch_mach']['G 0' + str(i)] = {'typ_id.h' : original_inertia['G 0' + str(i)]}
 config['synch_mach']['G 10'] = {'typ_id.h' : original_inertia['G 10']}
-
-config['outdir'] = 'C:\\Users\\aless\\Desktop\\inertia step simulations\\verifiche_2'
-out_config_file = 'C:\\Users\\aless\\Desktop\\inertia step simulations\\config_verifiche_2.json'
-json.dump(config, open(out_config_file, 'w'), indent = 4)
+inertia_step = [100/3, 150/3, 200/3, 300/3, 400/3, 450/3, 500/3, 510/3]
+for step in inertia_step:
+    config['synch_mach']['Power Plant 11'] = {'typ_id.h': step}
+    config['outdir'] = 'C:\\Users\\aless\\Desktop\\inertia step simulations\\verifiche_'+str(step)
+    out_config_file = 'C:\\Users\\aless\\Desktop\\inertia step simulations\\config_verifiche_' +str(step) +'.json'
+    json.dump(config, open(out_config_file, 'w'), indent = 4)
