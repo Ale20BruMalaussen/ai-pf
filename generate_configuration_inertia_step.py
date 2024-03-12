@@ -4,6 +4,8 @@ import random
 random.seed(42)
 set_type = [1, 2, 3] #1 : low, 2 : medium, 3 : high
 
+
+add_step = False #metti true per fare le simulazioni con lo step
 original_inertia = {'G 02': 4.33,
                     'G 03': 4.47,
                     'G 04': 3.57,
@@ -14,7 +16,7 @@ original_inertia = {'G 02': 4.33,
                     'G 09': 3.45,
                     'G 10': 4.20}
 
-config_file = 'config\\IEEE39_AC_config.json'
+config_file = 'config\IEEE39_AC_config_grid_former.json'
 config = json.load(open(config_file, 'r'))
 
 def generate_limits(set):
@@ -47,6 +49,11 @@ def set_inertia(original_inertia, values_1, values_2, values_3, config):
             factor = values_3
         config['synch_mach']['G 0' + str(i)] = {'typ_id.h' : original_inertia['G 0' + str(i)]*factor}
     config['synch_mach']['G 10'] = {'typ_id.h' : original_inertia['G 10'] * values_3}
+    if add_step:
+        inertia_step = random.gauss(mu = 500, sigma = 150)
+        config['synch_mach']['Power Plant 11'] = {'typ_id.h': inertia_step/3}
+    else:
+        config['synch_mach']['Power Plant 11'] = {'typ_id.h': 1}
     return config
 
 for set_1 in set_type:
