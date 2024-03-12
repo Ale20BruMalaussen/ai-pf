@@ -1,39 +1,39 @@
 import numpy as np
+import math
 from matplotlib import pyplot as plt
-
-data_low = np.load('D:\\POLIMI\AI stable power\\39 New England\\fake grid forming\\IEEE 39 fake grid forming_AC_TF_-4.0_1.0_100.npz',
-                allow_pickle = True)
-
-data_high = np.load('D:\POLIMI\AI stable power\\39 New England\\risultati fake grid forming alta inerzia\\IEEE 39 fake grid forming_AC_TF_-4.0_1.0_100.npz',
-                allow_pickle = True) 
-
-
+import os
+inertia_step = [100/3, 150/3, 200/3, 300/3, 400/3, 450/3, 500/3, 510/3]
+path_base = 'C:\\Users\\aless\\Desktop\\inertia step simulations'
+data = []
+for i, step in enumerate(inertia_step):
+    path = os.path.join(path_base, 'verifiche_'+ str(step), 'IEEE 39 fake grid forming_AC_TF_-4.0_1.0_100.npz')
+    data.append(np.load(path, allow_pickle = True))
 
 
 # Select the indeces with .speed for the generators
-var_names = data_high['var_names']
+var_names = data[0]['var_names']
 indeces = [i for i, s in enumerate(var_names) if '.speed' in s]
 
 # Extract Transfer Function
-TF_low = data_low['TF'][0]
-TF_low = TF_low[:, indeces].transpose()
-# Take the absolute value of the transfer function
-TF_low = np.abs(TF_low)
-
-TF_high = data_high['TF'][0]
-TF_high = TF_high[:, indeces].transpose()
-# Take the absolute value of the transfer function
-TF_high = np.abs(TF_high)
+def extract_tf(data):
+    TF = data['TF'][0]
+    TF = TF[:, indeces].transpose()
+    # Take the absolute value of the transfer function
+    TF = np.abs(TF)
+    return TF
+TF_list = []
+for sim in data:
+    TF_list.append(extract_tf(sim))
 
 x = np.logspace(-4, 1, 501)
 # Plotting
 plt.figure(figsize=(10, 6))
-
-spectrum_low = 20*np.log10(TF_low[6])
-spectrum_high = 20*np.log10(TF_high[6])
-plt.semilogx(x, spectrum_low, label=f'low')
-plt.semilogx(x, spectrum_high, label=f'high')
-plt.ylim((-170,-90))
+data_original = np.load('C:\\Users\\aless\\Desktop\\inertia step simulations\\verifiche_2\\IEEE 39 fake grid forming_AC_TF_-4.0_1.0_100.npz', allow_pickle = True)
+tf_or = extract_tf(data_original)
+plt.semilogx(x, tf_or[4], lw = 5, label = 'original')
+for i, item in enumerate(TF_list):
+    plt.semilogx(x, item[7], label=str(inertia_step[i]*3))
+plt.xlim((0.001,0.1))
 
 # for i, spectrum in enumerate(TF):
 #     spectrum = 20*np.log10(spectrum)
