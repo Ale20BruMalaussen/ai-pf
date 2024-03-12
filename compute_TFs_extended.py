@@ -18,14 +18,15 @@ def usage(exit_code=None):
 
 
 if __name__ == '__main__':
-    directory = 'C:\\Users\\aless\\Desktop\\modal_analysis\\IEEE39\\default' #dove sono gli npz delle simulazioni
+    directory = 'C:\\Users\\aless\\Desktop\\inertia step simulations\\no_step' #dove sono le cartelle delle simulazioni
+    outdir = 'C:\\Users\\aless\\Desktop\\inertia step simulations\\spettri_no_step' #dove salveremo tutti gli spettri
     list_simulations = os.listdir(directory) #crea una lista di tutte le simulazioni
-    file_jacobiano = '39 Bus New England System_AC.npz'
+    file_jacobiano = 'IEEE 39 fake grid forming_AC.npz' #tutti i file hanno questo nome
 
     # default values    
-    fmin,fmax = -3., 2.
+    fmin,fmax = -3., -1. #tronchiamo a 0.1Hz
     steps_per_decade = 100
-    outdir = 'C:\\Users\\aless\\Desktop\\modal_analysis\\IEEE39\\transfer_functions' #dove salveremo tutti gli spettri
+    
     force = False
     save_mat = False
     load_names = ['Load 03']
@@ -35,7 +36,7 @@ if __name__ == '__main__':
     # time constant of the OU process
     tau = 20e-3
 
-    for sim in list_simulations[4288:]: #cicliamo tutto ogni file viene salvato quindi se vuoi interrompere basta che metti i giusti punti di inizio
+    for sim in list_simulations: #cicliamo tutto ogni file viene salvato quindi se vuoi interrompere basta che metti i giusti punti di inizio
         data_file =os.path.join(directory, sim, file_jacobiano)
         outfile = sim
 
@@ -225,10 +226,7 @@ if __name__ == '__main__':
         Mtot = data['momentum']
         interesting_variables = ['G 01.speed', 'G 02.speed', 'G 03.speed', 
                                  'G 04.speed', 'G 05.speed', 'G 06.speed', 
-                                 'G 07.speed', 'G 08.speed', 'G 09.speed', 'G 10.speed',    
-            'G 01.xspeed', 'G 02.xspeed', 'G 03.xspeed', 
-                                 'G 04.xspeed', 'G 05.xspeed', 'G 06.xspeed', 
-                                 'G 07.xspeed', 'G 08.xspeed', 'G 09.xspeed', 'G 10.xspeed']
+                                 'G 07.speed', 'G 08.speed', 'G 09.speed', 'G 10.speed']
         index = []
         var_to_save = []
         for var in var_names:
