@@ -704,11 +704,12 @@ if __name__ == '__main__':
         print('\nCannot get PowerFactory application.')
         sys.exit(1)
 
-    config_path = 'C:\\Users\\aless\\Desktop\\inertia step simulations\\config_no_step'
+    config_path = 'C:\\Users\\aless\\Desktop\\inertia step simulations\\config_step'
     simulation_list = os.listdir(config_path)
   
     i=0
     for sim in simulation_list:
+        print(sim)
         PF_APP.ResetCalculation()
         path = os.path.join(config_path, sim)
         run_AC_analysis(path)
