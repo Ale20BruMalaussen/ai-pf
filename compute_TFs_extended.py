@@ -18,8 +18,8 @@ def usage(exit_code=None):
 
 
 if __name__ == '__main__':
-    directory = 'C:\\Users\\aless\\Desktop\\inertia step simulations\\no_step' #dove sono le cartelle delle simulazioni
-    outdir = 'C:\\Users\\aless\\Desktop\\inertia step simulations\\spettri_no_step' #dove salveremo tutti gli spettri
+    directory = 'D:\\POLIMI\\AI stable power\\39 New England\\39 line simu step' #dove sono le cartelle delle simulazioni
+    outdir = "D:\\POLIMI\\AI stable power\\39 New England\\spettri step" #dove salveremo tutti gli spettri
     list_simulations = os.listdir(directory) #crea una lista di tutte le simulazioni
     file_jacobiano = 'IEEE 39 fake grid forming_AC.npz' #tutti i file hanno questo nome
 
