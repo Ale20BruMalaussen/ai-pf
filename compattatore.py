@@ -2,7 +2,7 @@
 import numpy as np
 import os
 directory = 'C:\\Users\\aless\\Desktop\\inertia step simulations'
-directory_spettri = os.path.join(directory, 'spettri_step')
+directory_spettri = os.path.join(directory, 'spettri_senza_step')
 lista_spettri = os.listdir(directory_spettri)
 Hlist = []
 matrice_totale = []
@@ -21,4 +21,4 @@ dataset['TF'] = np.stack(matrice_totale, axis = 0)
 print(dataset['TF'].shape)
 dataset['Mtot'] = np.array(Hlist)
 dataset['name'] = name_list
-np.savez_compressed(os.path.join(directory, 'dataset_step'), **dataset)
+np.savez_compressed(os.path.join(directory, 'dataset_no_step'), **dataset)
