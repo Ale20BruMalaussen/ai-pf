@@ -14,7 +14,7 @@ from pfcommon import OU, get_simulation_time, get_simulation_variables, \
 __all__ = ['compute_fourier_coeffs']
 
 progname = os.path.basename(sys.argv[0])
-sys.path.append("C:\Program Files\\DIgSILENT\\PowerFactory 2023 SP5\\Python\\3.9")
+sys.path.append("C:\Program Files\\DIgSILENT\\PowerFactory 2023\\Python\\3.11")
 
 def compute_fourier_coeffs(F, time, speed, mu=10):
     n_F = len(F)
@@ -596,7 +596,7 @@ def run_AC_analysis(config_file):
     outfile = os.path.join(outdir, config['project_name'] + '_AC.npz')
 
 
-    PF_db_name = config['db_name'] if 'db_name' in config else 'aless'
+    PF_db_name = config['db_name'] if 'db_name' in config else 'zampa'
     project_name = '\\' + PF_db_name + '\\' + config['project_name']
     project = _activate_project(project_name, verbosity_level>0)
     #_print_network_info()
@@ -704,7 +704,7 @@ if __name__ == '__main__':
         print('\nCannot get PowerFactory application.')
         sys.exit(1)
 
-    config_path = 'C:\\Users\\aless\\Desktop\\inertia step simulations\\config_step'
+    config_path = "D:\\POLIMI\\AI stable power\\39 New England\\39 step line"
     simulation_list = os.listdir(config_path)
   
     i=0
