@@ -6,7 +6,7 @@ random.seed(42)
 # set_type = [1, 2, 3] #1 : low, 2 : medium, 3 : high
 
 
-add_step = False #metti true per fare le simulazioni con lo step
+add_step =  True #metti true per fare le simulazioni con lo step
 original_inertia = {'G 02': 4.33,
                     'G 03': 4.47,
                     'G 04': 3.57,

@@ -709,6 +709,7 @@ if __name__ == '__main__':
   
     i=0
     for sim in simulation_list:
+        print(sim)
         PF_APP.ResetCalculation()
         path = os.path.join(config_path, sim)
         run_AC_analysis(path)
