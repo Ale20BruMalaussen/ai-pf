@@ -23,10 +23,17 @@ config = json.load(open(config_file, 'r'))
 for gen in original_inertia.keys():
     config['synch_mach'][gen] = {'typ_id.h' : original_inertia[gen]}
 
-path_base= "D:\\POLIMI\\AI stable power\\39 New England\\39 no step line"
-path_base_step = "D:\\POLIMI\\AI stable power\\39 New England\\39 step line"
-out_base = "D:\\POLIMI\\AI stable power\\39 New England\\39 line simu"
-out_base_step = "D:\\POLIMI\\AI stable power\\39 New England\\39 line simu step"
+path_base= "C:\\Users\\aless\\Desktop\\inertia_line\\config no step"
+path_base_step = "C:\\Users\\aless\\Desktop\\inertia_line\\config step"
+out_base = "C:\\Users\\aless\\Desktop\\inertia_line\\simu no step"
+out_base_step = "C:\\Users\\aless\\Desktop\\inertia_line\\simu step"
+
+
+# path_base= "D:\\POLIMI\\AI stable power\\39 New England\\39 no step line"
+# path_base_step = "D:\\POLIMI\\AI stable power\\39 New England\\39 step line"
+# out_base = "D:\\POLIMI\\AI stable power\\39 New England\\39 line simu"
+# out_base_step = "D:\\POLIMI\\AI stable power\\39 New England\\39 line simu step"
+
 H_list = np.linspace(2.5, 10.05, 150)
 for H in H_list:
     config['synch_mach']['G 01'] = {'typ_id.h' : H}
