@@ -1,6 +1,6 @@
 {
-	"db_name": "Terna_Inerzia",
-    "project_name": "IEEE39_stoch",
+	"db_name": "aless\\stoch",
+    "project_name": "IEEE39_stoch_CIG",
     "grid_name": "Grid",
 	"library_name": "Library",
 	"user_models_name": "User Defined Models",
@@ -27,5 +27,5 @@
 	},
 	"coiref": "element",
 	"dt": 0.005,
-	"tstop": 7200
+	"tstop": 1000
 }

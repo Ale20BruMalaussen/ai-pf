@@ -21,4 +21,7 @@ dataset['TF'] = np.stack(matrice_totale, axis = 0)
 print(dataset['TF'].shape)
 dataset['Mtot'] = np.array(Hlist)
 dataset['name'] = name_list
+
 np.savez_compressed(os.path.join(directory, 'dataset_no_step'), **dataset)
+
+

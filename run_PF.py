@@ -21,7 +21,7 @@ from pfcommon import OU, get_simulation_time, get_simulation_variables, \
 __all__ = ['compute_fourier_coeffs']
 
 progname = os.path.basename(sys.argv[0])
-sys.path.append("C:\\Program Files\\DIgSILENT\\PowerFactory 2023\\Python\\3.11")
+sys.path.append("C:\\Program Files\\DIgSILENT\\PowerFactory 2023 SP5\\Python\\3.9")
 
 
 def compute_fourier_coeffs(F, time, speed, mu=10):
@@ -638,7 +638,7 @@ def run_tran():
     rs,seed = _get_random_state(config)
     if verbosity_level > 0: print(f'Seed: {seed}.')
 
-    PF_db_name = config['db_name'] if 'db_name' in config else 'zampa'
+    PF_db_name = config['db_name'] if 'db_name' in config else 'aless'
     project_name = '\\' + PF_db_name + '\\' + project_name
     project = _activate_project(project_name, verbosity_level>0)
     _print_network_info()
@@ -833,7 +833,7 @@ def run_AC_analysis():
         print(f'{progname}: output file `{outfile}` exists: use -f to overwrite.')
         sys.exit(1)
 
-    PF_db_name = config['db_name'] if 'db_name' in config else 'zampa'
+    PF_db_name = config['db_name'] if 'db_name' in config else 'aless'
     project_name = '\\' + PF_db_name + '\\' + config['project_name']
     project = _activate_project(project_name, verbosity_level>0)
     _print_network_info()
@@ -1007,7 +1007,7 @@ def run_AC_tran_analysis():
         print(f'{progname}: output file `{outfile}` exists: use -f to overwrite.')
         sys.exit(1)
 
-    PF_db_name = config['db_name'] if 'db_name' in config else 'zampa'
+    PF_db_name = config['db_name'] if 'db_name' in config else 'aless'
     project_name = '\\' + PF_db_name + '\\' + project_name
     project = _activate_project(project_name, verbosity_level>0)
     _print_network_info()
@@ -1162,7 +1162,7 @@ def run_load_step_sim():
         print(f'{progname}: output file `{outfile}` exists: use -f to overwrite.')
         sys.exit(1)
 
-    PF_db_name = config['db_name'] if 'db_name' in config else 'zampa'
+    PF_db_name = config['db_name'] if 'db_name' in config else 'aless'
     project_name = '\\' + PF_db_name + '\\' + config['project_name']
     project = _activate_project(project_name, verbosity_level>0)
     _print_network_info()

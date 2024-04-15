@@ -2,8 +2,8 @@ import numpy as np
 import math
 from matplotlib import pyplot as plt
 import os
-inertia_step = [100/3, 150/3, 200/3, 300/3, 400/3, 450/3, 500/3, 510/3]
-path_base = 'C:\\Users\\aless\\Desktop\\inertia step simulations'
+inertia_step = [100/3, 200/3, 300/3, 400/3, 500/3]
+path_base = 'C:\\Users\\aless\\Desktop\\inertia step simulations\\verifiche_varie'
 data = []
 for i, step in enumerate(inertia_step):
     path = os.path.join(path_base, 'verifiche_'+ str(step), 'IEEE 39 fake grid forming_AC_TF_-4.0_1.0_100.npz')
@@ -28,12 +28,12 @@ for sim in data:
 x = np.logspace(-4, 1, 501)
 # Plotting
 plt.figure(figsize=(10, 6))
-data_original = np.load('C:\\Users\\aless\\Desktop\\inertia step simulations\\verifiche_2\\IEEE 39 fake grid forming_AC_TF_-4.0_1.0_100.npz', allow_pickle = True)
+data_original = np.load('C:\\Users\\aless\\Desktop\\inertia step simulations\\verifiche_varie\\verifiche_2\\IEEE 39 fake grid forming_AC_TF_-4.0_1.0_100.npz', allow_pickle = True)
 tf_or = extract_tf(data_original)
 plt.semilogx(x, tf_or[4], lw = 5, label = 'original')
 for i, item in enumerate(TF_list):
     plt.semilogx(x, item[7], label=str(inertia_step[i]*3))
-plt.xlim((0.001,0.1))
+#plt.xlim((0.001,0.1))
 
 # for i, spectrum in enumerate(TF):
 #     spectrum = 20*np.log10(spectrum)
