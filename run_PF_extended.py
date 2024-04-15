@@ -704,7 +704,7 @@ if __name__ == '__main__':
         print('\nCannot get PowerFactory application.')
         sys.exit(1)
 
-    config_path = 'C:\\Users\\aless\\Desktop\\inertia step simulations\\config_step'
+    config_path = 'C:\\Users\\aless\\Desktop\\inertia step simulations\\newset_line_step'
     simulation_list = os.listdir(config_path)
   
     i=0
