@@ -3,6 +3,7 @@ import re
 import sys
 import numpy as np
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 progname = os.path.basename(sys.argv[0])
 
@@ -114,8 +115,11 @@ if __name__ == '__main__':
         Jgx = J[N_state_vars:, :N_state_vars]
         Jgy = J[N_state_vars:, N_state_vars:]
         Jgy_inv = np.linalg.inv(Jgy)
-        Atmp = Jfx - Jfy @ Jgy_inv @ Jgx
-        assert np.all(np.abs(A-Atmp) < 1e-8)
+        Atmp = Jfx - Jfy @ Jgy_inv @ Jgx # sta calcolando la state matrix
+        # sembra che la matrice Atmp sia calcolata per analisi o manipolazioni specifiche,
+        # e il confronto con la matrice A originale è utilizzato come controllo di validità per
+        # assicurarsi che le operazioni svolte sulle matrici siano corrette.
+        assert np.all(np.abs(A-Atmp) < 1e-8) 
 
         load_buses = data['load_buses'].item()
         all_load_names = []
@@ -227,7 +231,7 @@ if __name__ == '__main__':
         interesting_variables = ['G 01.speed', 'G 02.speed', 'G 03.speed', 
                                  'G 04.speed', 'G 05.speed', 'G 06.speed', 
                                  'G 07.speed', 'G 08.speed', 'G 09.speed', 'G 10.speed']
-        index = np.ones(TF.shape[1], dtype=bool)
+        index = []
         var_to_save = []
         for var in var_names:
             if var in interesting_variables:
@@ -235,10 +239,7 @@ if __name__ == '__main__':
                 var_to_save.append(var)
             else:
                 index.append(False)
-        print(len(var_names))
-        print(len(index))
-        print(TF.shape)
-        TF = np.squeeze(TF)[:, :index.size]
+        TF = np.squeeze(TF)[:,index]
         
         out = {'A': A, 'F': F, 'TF': TF,
             'var_names': var_to_save, 'SM_names': SM_names, 'bus_names': bus_names,

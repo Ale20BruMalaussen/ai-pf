@@ -6,7 +6,7 @@ random.seed(42)
 # set_type = [1, 2, 3] #1 : low, 2 : medium, 3 : high
 
 
-add_step =  True #metti true per fare le simulazioni con lo step
+#add_step =  True #metti true per fare le simulazioni con lo step
 original_inertia = {'G 02': 4.33,
                     'G 03': 4.47,
                     'G 04': 3.57,
@@ -27,15 +27,15 @@ path_base= "D:\\POLIMI\\AI stable power\\39 New England\\39 no step line"
 path_base_step = "D:\\POLIMI\\AI stable power\\39 New England\\39 step line"
 out_base = "D:\\POLIMI\\AI stable power\\39 New England\\39 line simu"
 out_base_step = "D:\\POLIMI\\AI stable power\\39 New England\\39 line simu step"
-H_list = np.linspace(2.5, 10.05, 150)
+H_list = np.linspace(2.5, 10.05, 151)
 for H in H_list:
     config['synch_mach']['G 01'] = {'typ_id.h' : H}
-    config['synch_mach']['Power Plant 11'] = {'typ_id.h' : 1}
+    config['synch_mach']['Power plant 11'] = {'typ_id.h' : 1}
     config['outdir'] = os.path.join(out_base, '_'+str(H))
     out_config_file = os.path.join(path_base, '_'+str(H)+'.json')
     json.dump(config, open(out_config_file, 'w'), indent = 4)
 
-    config['synch_mach']['Power Plant 11'] = {'typ_id.h' : 500}
+    config['synch_mach']['Power plant 11'] = {'typ_id.h' : 500/3}
     config['outdir'] = os.path.join(out_base_step, '_'+str(H))
     out_config_file = os.path.join(path_base_step, '_'+str(H)+'.json')
     json.dump(config, open(out_config_file, 'w'), indent = 4)
