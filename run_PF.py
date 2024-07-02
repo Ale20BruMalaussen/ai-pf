@@ -12,7 +12,7 @@ import json
 from time import time as TIME
 import numpy as np
 from numpy.random import RandomState, SeedSequence, MT19937
-
+sys.path.append("C:\Program Files\\DIgSILENT\\PowerFactory 2023 SP5\\Python\\3.9")
 from pfcommon import OU, get_simulation_time, get_simulation_variables, \
     run_power_flow, parse_sparse_matrix_file, parse_Amat_vars_file, \
         parse_Jacobian_vars_file
@@ -21,7 +21,6 @@ from pfcommon import OU, get_simulation_time, get_simulation_variables, \
 __all__ = ['compute_fourier_coeffs']
 
 progname = os.path.basename(sys.argv[0])
-sys.path.append("C:\\Program Files\\DIgSILENT\\PowerFactory 2023 SP5\\Python\\3.9")
 
 
 def compute_fourier_coeffs(F, time, speed, mu=10):
@@ -49,7 +48,7 @@ TO_TURN_ON = []
 TO_TURN_OFF = []
 # HVDCs contains the loads that model the HVDC connections in the Sardinia network 
 HVDCs = []
-# HVDC_P contains the default values of absorbed active powert of the HVDCs
+# HVDC_P contains the default values of absorbed active power of the HVDCs
 HVDC_P = {}
 
 
@@ -60,6 +59,7 @@ HVDC_P = {}
 
 def _IC(dt, coiref=0, verbose=False):
     coirefs = {'element': 0, 'coi': 1, 'center_of_inertia': 1, 'nominal_frequency': 2}
+    coiref_values = np.unique(list(coirefs.values()))
     ### compute the initial condition of the simulation
     inc = PF_APP.GetFromStudyCase('ComInc')
     inc.iopt_sim = 'rms'
@@ -71,8 +71,8 @@ def _IC(dt, coiref=0, verbose=False):
             raise Exception('Accepted values for coiref are ' + ', '.join(coirefs.keys()))
         inc.iopt_coiref = coirefs[coiref]
     elif isinstance(coiref, int):
-        if coiref not in (0,1,2):
-            raise Exception('Accepted values for coiref are 0, 1, or 2')
+        if coiref not in coiref_values:
+            raise Exception('Accepted values for coiref are {}'.format(','.join(list(map(str,coiref_values)))))
         inc.iopt_coiref = coiref
     else:
         raise Exception('coiref must be a string or an integer')
@@ -200,6 +200,24 @@ def _apply_configuration(config, verbosity_level):
                 raise Exception(f'Do not know how to deal with key `{k}` in config["synch_mach"]')
         in_service,TO_TURN_OFF = _find_SMs_to_toggle(SM_dict)
     TO_TURN_ON += in_service
+    
+    if 'CIG' in config:
+        composite_models = _get_objects('*.ElmComp')
+        CIG_names = list(config['CIG'].keys())
+        for model in composite_models:
+            if model.loc_name in CIG_names:
+                element_names = list(config['CIG'][model.loc_name].keys())
+                for elem in model.pelm:
+                    if elem.loc_name in element_names:
+                        param_names = elem.typ_id.sParams[0].split(',')
+                        params = elem.params
+                        for k,value in config['CIG'][model.loc_name][elem.loc_name].items():
+                            idx = param_names.index(k)
+                            # elem.params[idx] = value does not set the parameter value
+                            params[idx] = value
+                            print('Parameter `{}` (no. {}) of element `{}` of model `{}` set to {}.'.\
+                                  format(k,idx,elem.loc_name,model.loc_name,value))
+                        elem.params = params
 
     # switch off the objects that are currently in service
     _turn_off_objects(in_service)
@@ -366,7 +384,12 @@ def _get_attributes(record_map, verbose=False):
                         if '.' in attr_name:
                             obj = dev
                             for subattr in attr_name.split('.'):
-                                obj = obj.GetAttribute(subattr)
+                                if '[' in subattr:
+                                    idx = int(re.search('\[\d+\]', subattr)[0][1:-1])
+                                    subattr_name = subattr.split('[')[0]
+                                    obj = obj.GetAttribute(subattr_name)[idx]
+                                else:
+                                    obj = obj.GetAttribute(subattr)
                             attributes[key][attr_name].append(obj)
                         else:
                             attributes[key][attr_name].append(dev.GetAttribute(attr_name))
@@ -628,8 +651,14 @@ def run_tran():
 
     project_name = config['project_name']
     
+    try:
+        outdir = config['outdir']
+        if not os.path.isdir(outdir):
+            os.makedirs(outdir)
+    except:
+        outdir = '.'
     if outfile is None:
-        outfile = '{}_tran.npz'.format(project_name)
+        outfile = os.path.join(outdir, '{}_tran.npz'.format(project_name))
 
     if os.path.isfile(outfile) and not force:
         print(f'{progname}: output file `{outfile}` exists: use -f to overwrite.')
@@ -638,7 +667,7 @@ def run_tran():
     rs,seed = _get_random_state(config)
     if verbosity_level > 0: print(f'Seed: {seed}.')
 
-    PF_db_name = config['db_name'] if 'db_name' in config else 'aless'
+    PF_db_name = config['db_name'] if 'db_name' in config else 'Terna_Inerzia'
     project_name = '\\' + PF_db_name + '\\' + project_name
     project = _activate_project(project_name, verbosity_level>0)
     _print_network_info()
@@ -729,7 +758,7 @@ def run_tran():
 
         interval = (0, None)
         time,data = _get_data(res, config['record'], project, interval, dt, verbosity_level>1)
-        attributes, device_names, ref_SMs = _get_attributes(config['record'], verbosity_level>2)
+        attributes, device_names, ref_SMs = _get_attributes(config['record'], verbosity_level>1)
         blob = {'config': config,
                 'seed': seed,
                 'OU_seeds': seeds,
@@ -823,7 +852,7 @@ def run_AC_analysis():
     try:
         outdir = config['outdir']
         if not os.path.isdir(outdir):
-            os.mkdir(outdir)
+            os.makedirs(outdir)
     except:
         outdir = '.'
         
@@ -833,7 +862,7 @@ def run_AC_analysis():
         print(f'{progname}: output file `{outfile}` exists: use -f to overwrite.')
         sys.exit(1)
 
-    PF_db_name = config['db_name'] if 'db_name' in config else 'aless'
+    PF_db_name = config['db_name'] if 'db_name' in config else 'Terna_Inerzia'
     project_name = '\\' + PF_db_name + '\\' + config['project_name']
     project = _activate_project(project_name, verbosity_level>0)
     _print_network_info()
@@ -867,15 +896,25 @@ def run_AC_analysis():
     sys.stdout.write('Running modal analysis... ')
     sys.stdout.flush()
     err = modal_analysis.Execute()
+    print('done.')
 
     _restore_network_state(verbosity_level>2)
 
     if err:
         print('ERROR!')
     else:
-        sys.stdout.write('done.\nSaving data... ')
+        sys.stdout.write('Saving data... ')
         sys.stdout.flush()
-        ref_SMs = [sm.loc_name for sm in _get_objects('*.ElmSym') if sm.ip_ctrl]
+
+        ### SYNCHRONOUS MACHINES        
+        SMs = _get_objects('*.ElmSym')
+        gen_names = [obj.loc_name for obj in SMs]
+        ref_SMs = [sm.loc_name for sm in SMs if sm.ip_ctrl]
+        
+        # STATIC GENERATORS
+        static_gen_names = [obj.loc_name for obj in _get_objects('*.ElmGenStat')]
+
+        # LOADS
         loads = _get_objects('*.ElmLod')
         load_buses, bus_equiv_terms = {}, {}
         for i,load in enumerate(loads):
@@ -899,6 +938,7 @@ def run_AC_analysis():
             equiv_terms_names = sorted([term.loc_name for term in equiv_terms])
             bus_equiv_terms[load_buses[load.loc_name]] = equiv_terms_names
 
+        # BUSES
         buses = _get_objects('*.ElmTerm')
         for i,bus in enumerate(buses):
             equiv_terms = bus.GetEquivalentTerminals()
@@ -918,8 +958,7 @@ def run_AC_analysis():
         vars_idx,state_vars,voltages,currents,signals = \
             parse_Jacobian_vars_file(os.path.join(outdir,'VariableToIdx_Jacobian.txt'))
         omega_col_idx, = np.where([name == 'speed' for name in var_names])
-        gen_names = [os.path.splitext(os.path.basename(model_names[i]))[0] \
-                     for i in omega_col_idx]
+
         data = {'config': config,
                 'inertia': Htot,
                 'energy': Etot,
@@ -938,6 +977,7 @@ def run_AC_analysis():
                 'model_names': model_names,
                 'omega_col_idx': omega_col_idx,
                 'gen_names': gen_names,
+                'static_gen_names': static_gen_names,
                 'load_buses': load_buses,
                 'bus_equiv_terms': bus_equiv_terms,
                 'ref_SMs': ref_SMs}
@@ -1007,7 +1047,7 @@ def run_AC_tran_analysis():
         print(f'{progname}: output file `{outfile}` exists: use -f to overwrite.')
         sys.exit(1)
 
-    PF_db_name = config['db_name'] if 'db_name' in config else 'aless'
+    PF_db_name = config['db_name'] if 'db_name' in config else 'Terna_Inerzia'
     project_name = '\\' + PF_db_name + '\\' + project_name
     project = _activate_project(project_name, verbosity_level>0)
     _print_network_info()
@@ -1162,7 +1202,7 @@ def run_load_step_sim():
         print(f'{progname}: output file `{outfile}` exists: use -f to overwrite.')
         sys.exit(1)
 
-    PF_db_name = config['db_name'] if 'db_name' in config else 'aless'
+    PF_db_name = config['db_name'] if 'db_name' in config else 'Terna_Inerzia'
     project_name = '\\' + PF_db_name + '\\' + config['project_name']
     project = _activate_project(project_name, verbosity_level>0)
     _print_network_info()
@@ -1243,7 +1283,7 @@ commands = {'help': help,
             'AC-tran': run_AC_tran_analysis,
             'load-step': run_load_step_sim,
             'tran': run_tran}
-
+      
 if __name__ == '__main__':
     if len(sys.argv) == 1 or sys.argv[1] in ('-h','--help', 'help'):
         commands['help']()

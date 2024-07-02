@@ -6,7 +6,43 @@
 	"user_models_name": "User Defined Models",
 	"frame_name": "TimeVaryingLoadFrame",
 	"out_of_service": {"ElmGenstat": []},
-	"synch_mach": {"G 02": {"typ_id.h": 4.329}},
+	"synch_mach": {
+        "G 02": {
+            "typ_id.h": 4.33
+        },
+        "G 03": {
+            "typ_id.h": 4.47
+        },
+        "G 04": {
+            "typ_id.h": 3.57
+        },
+        "G 05": {
+            "typ_id.h": 4.33
+        },
+        "G 06": {
+            "typ_id.h": 4.35
+        },
+        "G 07": {
+            "typ_id.h": 3.77
+        },
+        "G 08": {
+            "typ_id.h": 3.47
+        },
+        "G 09": {
+            "typ_id.h": 3.45
+        },
+        "G 10": {
+            "typ_id.h": 4.2
+        },
+        "G 01": {
+            "typ_id.h": 5
+        }
+    },
+	"CIG": {
+		"VSM Bus 08": {"CM - Power Control VSG 08": {"Ta": 160}},
+		"VSM Bus 14": {"CM - Power Control VSG 14": {"Ta": 160}},
+		"VSM Bus 27": {"CM - Power Control VSG 27": {"Ta": 160}}
+	},
     "stoch_loads": ["Load 03", "Load 21"],
 	"limits": {"P": [5.0, 1e3], "Q": [5.0, 1e3]},
 	"sigma": {"P": 0.01, "Q": 0.0},
@@ -27,5 +63,5 @@
 	},
 	"coiref": "element",
 	"dt": 0.005,
-	"tstop": 1000
+	"tstop": 7200
 }

@@ -1,9 +1,44 @@
 {
-    "project_name": "IEEE 39 fake grid forming",
+    "db_name": "aless",
+	"project_name": "IEEE 39 fake grid forming",
     "grid_name": "Grid",
-	"out_of_service": {"ElmGenstat": []},
-	"synch_mach": {"G 02": {"typ_id.h": 4.329}},
+	"out_of_service": {},
+	"synch_mach": {
+        "G 02": {
+            "typ_id.h": 4.33
+        },
+        "G 03": {
+            "typ_id.h": 3.57
+        },
+        "G 04": {
+            "typ_id.h": 4.47
+        },
+        "G 05": {
+            "typ_id.h": 4.33
+        },
+        "G 06": {
+            "typ_id.h": 4.35
+        },
+        "G 07": {
+            "typ_id.h": 3.77
+        },
+        "G 08": {
+            "typ_id.h": 3.47
+        },
+        "G 09": {
+            "typ_id.h": 3.45
+        },
+        "G 10": {
+            "typ_id.h": 4.2
+        },
+        "G 01": {
+            "typ_id.h": 5
+        },
+		"Power Plant 11": {
+			"typ_id.h": 160
+		}
+    },
 	"coiref": "element",
-	"outdir": "D:\\POLIMI\\AI stable power\\39 New England\\risultati fake grid forming alta inerzia"
+	"outdir": "C:\\Users\\aless\\Desktop\\prova_non_param_step"
 
 }

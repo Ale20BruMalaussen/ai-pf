@@ -227,7 +227,7 @@ if __name__ == '__main__':
         interesting_variables = ['G 01.speed', 'G 02.speed', 'G 03.speed', 
                                  'G 04.speed', 'G 05.speed', 'G 06.speed', 
                                  'G 07.speed', 'G 08.speed', 'G 09.speed', 'G 10.speed']
-        index = np.ones(TF.shape[1], dtype=bool)
+        index = []
         var_to_save = []
         for var in var_names:
             if var in interesting_variables:
@@ -238,7 +238,7 @@ if __name__ == '__main__':
         print(len(var_names))
         print(len(index))
         print(TF.shape)
-        TF = np.squeeze(TF)[:, :index.size]
+        TF = np.squeeze(TF)[:, :, index]
         
         out = {'A': A, 'F': F, 'TF': TF,
             'var_names': var_to_save, 'SM_names': SM_names, 'bus_names': bus_names,
