@@ -1,0 +1,46 @@
+{
+    "db_name": "aless\\stoch",
+	"project_name": "IEEE39_stoch_CIG",
+    "grid_name": "Grid",
+	"out_of_service": {},
+	"synch_mach": {
+        "G 02": {
+            "typ_id.h": 4.33
+        },
+        "G 03": {
+            "typ_id.h": 3.57
+        },
+        "G 04": {
+            "typ_id.h": 4.47
+        },
+        "G 05": {
+            "typ_id.h": 4.33
+        },
+        "G 06": {
+            "typ_id.h": 4.35
+        },
+        "G 07": {
+            "typ_id.h": 3.77
+        },
+        "G 08": {
+            "typ_id.h": 3.47
+        },
+        "G 09": {
+            "typ_id.h": 3.45
+        },
+        "G 10": {
+            "typ_id.h": 4.2
+        },
+        "G 01": {
+            "typ_id.h": 5
+        }
+    },
+    "CIG": {
+		"VSM Bus 08": {"CM - Power Control VSG 08": {"Ta": 160}},
+		"VSM Bus 14": {"CM - Power Control VSG 14": {"Ta": 160}},
+		"VSM Bus 27": {"CM - Power Control VSG 27": {"Ta": 160}}
+    },
+	"coiref": "element",
+	"outdir": "C:\\Users\\aless\\Desktop\\prova_non_param_step"
+
+}
