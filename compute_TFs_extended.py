@@ -240,7 +240,7 @@ if __name__ == '__main__':
         print(TF.shape)
         TF = np.squeeze(TF)[:, :, index]
         
-        out = {'A': A, 'F': F, 'TF': TF,
+        out = {'config':data['config'],'A': A, 'F': F, 'TF': TF,
             'var_names': var_to_save, 'SM_names': SM_names, 'bus_names': bus_names,
             'Htot': Htot, 'Etot': Etot, 'Mtot': Mtot, 'H': H, 'S': S, 'P': P, 'Q': Q,
             'PF': data['PF_without_slack']}
