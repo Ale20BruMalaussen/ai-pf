@@ -7,7 +7,7 @@ import argparse as arg
 import numpy as np
 import tables
 
-from run_pf_simulation import run_sim
+from programmi_Linaro.run_pf_simulation import run_sim
 
 progname = os.path.basename(sys.argv[0])
 
