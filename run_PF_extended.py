@@ -566,8 +566,8 @@ class OULoad(TimeVaryingLoad):
 ############################################################
 
 
-def run_AC_analysis(config_file):
-    
+def run_AC_analysis(config_folder, config_file):
+    config_path = os.path.join(config_folder, config_file)
     def usage(exit_code=None):
         print(f'usage: {progname} AC [-f | --force] [-o | --outfile <filename>] [-v | --verbose <level>] config_file')
         if exit_code is not None:
@@ -578,27 +578,27 @@ def run_AC_analysis(config_file):
     verbosity_level = 0
 
 
-    if not os.path.isfile(config_file):
-        print('{}: {}: no such file.'.format(progname, config_file))
+    if not os.path.isfile(config_path):
+        print('{}: {}: no such file.'.format(progname, config_path))
         sys.exit(1)
-    config = json.load(open(config_file, 'r'))
+    config = json.load(open(config_path, 'r'))
     if 'coiref' not in config:
         config['coiref'] = 'nominal_frequency'
 
     try:
-        outdir = input_outdir
+        outdir = os.path.join(input_outdir, config_file)
         if not os.path.isdir(outdir):
             os.mkdir(outdir)
     except:
         try:
-            outdir = config['outdir']
+            outdir = os.config['outdir']
             if not os.path.isdir(outdir):
                 os.mkdir(outdir)
         except:
             outdir = '.'
         
 
-    outfile = os.path.join(outdir, config['project_name'] + '_AC.npz')
+    outfile = os.path.join(outdir, config_file[:-5], config['project_name'] + '_AC.npz')
 
 
     PF_db_name = config['db_name'] if 'db_name' in config else 'aless'
@@ -717,7 +717,6 @@ if __name__ == '__main__':
     for sim in simulation_list:
         print(sim)
         PF_APP.ResetCalculation()
-        path = os.path.join(config_path, sim)
-        run_AC_analysis(path)
+        run_AC_analysis(config_path, sim)
         print(i)
         i+=1
