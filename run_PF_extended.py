@@ -586,11 +586,16 @@ def run_AC_analysis(config_file):
         config['coiref'] = 'nominal_frequency'
 
     try:
-        outdir = config['outdir']
+        outdir = input_outdir
         if not os.path.isdir(outdir):
             os.mkdir(outdir)
     except:
-        outdir = '.'
+        try:
+            outdir = config['outdir']
+            if not os.path.isdir(outdir):
+                os.mkdir(outdir)
+            except:
+                outdir = '.'
         
 
     outfile = os.path.join(outdir, config['project_name'] + '_AC.npz')
@@ -704,7 +709,8 @@ if __name__ == '__main__':
         print('\nCannot get PowerFactory application.')
         sys.exit(1)
 
-    config_path = "C:\\Users\\aless\\Desktop\\inertia_line\\config no step"
+    config_path = "C:\\Users\\aless\\Desktop\\dataset_AI_stablepower\\small_experiments\\confronto_spettri_gen_OOS\\config_file"
+    input_outdir = "C:\\Users\\aless\\Desktop\\dataset_AI_stablepower\\small_experiments\\confronto_spettri_gen_OOS\\simu_output"
     simulation_list = os.listdir(config_path)
   
     i=0
