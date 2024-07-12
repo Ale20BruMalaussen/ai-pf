@@ -586,7 +586,7 @@ def run_AC_analysis(config_folder, config_file):
         config['coiref'] = 'nominal_frequency'
 
     try:
-        outdir = os.path.join(input_outdir, config_file)
+        outdir = os.path.join(input_outdir, config_file[:-5])
         if not os.path.isdir(outdir):
             os.mkdir(outdir)
     except:
@@ -598,7 +598,7 @@ def run_AC_analysis(config_folder, config_file):
             outdir = '.'
         
 
-    outfile = os.path.join(outdir, config_file[:-5], config['project_name'] + '_AC.npz')
+    outfile = os.path.join(outdir, config['project_name'] + '_AC.npz')
 
 
     PF_db_name = config['db_name'] if 'db_name' in config else 'aless'
