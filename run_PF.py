@@ -12,8 +12,8 @@ import json
 from time import time as TIME
 import numpy as np
 from numpy.random import RandomState, SeedSequence, MT19937
-sys.path.append("C:\Program Files\\DIgSILENT\\PowerFactory 2023 SP5\\Python\\3.9")
-from programmi_Linaro.pfcommon import OU, get_simulation_time, get_simulation_variables, \
+
+from pfcommon import OU, get_simulation_time, get_simulation_variables, \
     run_power_flow, parse_sparse_matrix_file, parse_Amat_vars_file, \
         parse_Jacobian_vars_file
 
@@ -651,14 +651,8 @@ def run_tran():
 
     project_name = config['project_name']
     
-    try:
-        outdir = config['outdir']
-        if not os.path.isdir(outdir):
-            os.makedirs(outdir)
-    except:
-        outdir = '.'
     if outfile is None:
-        outfile = os.path.join(outdir, '{}_tran.npz'.format(project_name))
+        outfile = '{}_tran.npz'.format(project_name)
 
     if os.path.isfile(outfile) and not force:
         print(f'{progname}: output file `{outfile}` exists: use -f to overwrite.')
@@ -1283,7 +1277,7 @@ commands = {'help': help,
             'AC-tran': run_AC_tran_analysis,
             'load-step': run_load_step_sim,
             'tran': run_tran}
-      
+
 if __name__ == '__main__':
     if len(sys.argv) == 1 or sys.argv[1] in ('-h','--help', 'help'):
         commands['help']()
