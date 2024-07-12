@@ -594,8 +594,8 @@ def run_AC_analysis(config_file):
             outdir = config['outdir']
             if not os.path.isdir(outdir):
                 os.mkdir(outdir)
-            except:
-                outdir = '.'
+        except:
+            outdir = '.'
         
 
     outfile = os.path.join(outdir, config['project_name'] + '_AC.npz')
