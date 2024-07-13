@@ -12,8 +12,8 @@ import json
 from time import time as TIME
 import numpy as np
 from numpy.random import RandomState, SeedSequence, MT19937
-
-from pfcommon import OU, get_simulation_time, get_simulation_variables, \
+sys.path.append("C:\Program Files\\DIgSILENT\\PowerFactory 2023 SP5\\Python\\3.9")
+from programmi_Linaro.pfcommon import OU, get_simulation_time, get_simulation_variables, \
     run_power_flow, parse_sparse_matrix_file, parse_Amat_vars_file, \
         parse_Jacobian_vars_file
 
