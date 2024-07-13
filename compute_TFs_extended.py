@@ -1,7 +1,18 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Oct 24 14:42:05 2023
+
+@author: Daniele Linaro
+"""
+
 import os
 import re
 import sys
 import numpy as np
+# from scipy.io import savemat
+# import matplotlib.pyplot as plt
+# import matplotlib
+# import seaborn as sns
 from tqdm import tqdm
 
 progname = os.path.basename(sys.argv[0])
@@ -9,45 +20,71 @@ progname = os.path.basename(sys.argv[0])
 def usage(exit_code=None):
     print(f'usage: {progname} [-h | --help] [-m | --fmin <value>] [-M | --fmax <value>]')
     prefix = '       ' + ' ' * (len(progname)+1)
-    print(prefix + '[-N | --n-steps <value>] [--save-mat]')
-    print(prefix + '[-o | --outfile <value>] [-f | --force] [--tau <value>] ')
-    print(prefix + '<--P | --Q | --PQ> <--dP | --sigmaP value1<,value2,...>>')
-    print(prefix + '<--dQ | --sigmaQ value1<,value2,...>> <-L | --loads load1<,load2,...>> file')
+    print(prefix + '[-N | --n-steps <value>] [--save-mat] [--F0 <value>]')
+    print(prefix + '[-o | --outfile <value>] [-f | --force] [--tau <value>]')
+    print(prefix + '[--ref-sm <name>] [--no-add-TF] <--P | --Q | --PQ>')
+    print(prefix + '<--dP | --sigmaP value1<,value2,...>> <--dQ | --sigmaQ value1<,value2,...>>')
+    print(prefix + '<-L | --loads load1<,load2,...>> file')
     if exit_code is not None:
         sys.exit(exit_code)
 
 
-if __name__ == '__main__':
-    directory = "D:\\POLIMI\\AI stable power\\39 New England\\39 line simu"
-    outdir = "D:\\POLIMI\\AI stable power\\39 New England\\spettri no step"
-    list_simulations = os.listdir(directory) #crea una lista di tutte le simulazioni
-    file_jacobiano = 'IEEE 39 fake grid forming line_AC.npz' #tutti i file hanno questo nome
+def save_to_mat(mat_file, data_dict=None, npz_data_file=None):
+    from scipy.io import savemat
+    if data_dict is not None:
+        out = data_dict
+    else:
+        data = np.load(npz_data_file, allow_pickle=True)
+        out = {key: data[key] for key in data.files}
+    savemat(mat_file, out, long_field_names=True)
 
-    # default values    
-    fmin,fmax = -3., -1. #tronchiamo a 0.1Hz
+
+if __name__ == '__main__':
+    ################################################################################################################
+##############################    USER SETTINGS    #############################################################
+################################################################################################################
+
+    #set input and output folder
+    jacobian_folder = r"C:\Users\aless\Desktop\dataset_AI_stablepower\small_experiments\confronto_spettri_gen_OOS\simu_output"
+    outdir = r"C:\Users\aless\Desktop\dataset_AI_stablepower\small_experiments\confronto_spettri_gen_OOS\spettri"
+    #set name of the jacobian npz
+    jacobian_name = 'IEEE39_stoch_CIG_AC.npz' #tutti i file npz hanno questo nome
+
+        #define parameters
+    #inject active or reactive power
+    use_P_constraint = True
+    use_Q_constraint = False
+    dP = [0.01] #injected power
+    dQ = []
+    sigmaP = []
+    sigmaQ = []    
+    load_names = ['Load 03', 'Load 21']
+    fmin,fmax = -3., 1.
     steps_per_decade = 100
-    
     force = False
     save_mat = False
-    load_names = ['Load 03']
-    use_P_constraint, use_Q_constraint = True, False
-    dP,dQ = [0.01],[]
-    sigmaP,sigmaQ = [],[]
     # time constant of the OU process
     tau = 20e-3
-
-    for sim in list_simulations: #cicliamo tutto ogni file viene salvato quindi se vuoi interrompere basta che metti i giusti punti di inizio
-        data_file =os.path.join(directory, sim, file_jacobiano)
-        outfile = sim
-
+    F0 = 50.
+    ref_SM_name = 'G 01'
+    compute_additional_TFs = True
+    list_simulations = os.listdir(jacobian_folder) #crea una lista di tutte le simulazioni
+    for sim in list_simulations:
+        data_file =os.path.join(jacobian_folder, sim, jacobian_name)
         if not os.path.isfile(data_file):
             print(f'{progname}: {data_file}: no such file.')
             sys.exit(1)
-        
+    
         if not use_P_constraint and not use_Q_constraint:
+            if save_mat:
+                save_to_mat(os.path.join(outdir, os.path.splitext(outfile
+                                                                if outfile is not None
+                                                                else data_file)[0] + '.mat'),
+                            npz_data_file=data_file)
+                sys.exit(0)
             print(f'{progname}: at least one of --P and --Q must be specified.')
             sys.exit(1)
-    
+        
         if use_P_constraint:
             if len(dP) == 0 and len(sigmaP) == 0:
                 print(f'{progname}: either --dP or --sigmaP must be specified with --P.')
@@ -63,12 +100,7 @@ if __name__ == '__main__':
                 print(f'{progname}: only one of --dP and --sigmaP can be specified.')
                 sys.exit(1)
 
-        if outfile is None:
-            outdir = os.path.dirname(data_file)
-            if outdir == '':
-                outdir = '.'
-            outfile = os.path.splitext(os.path.basename(data_file))[0] + \
-                '_TF_{}_{}_{}'.format(fmin, fmax, steps_per_decade) + '.npz'
+        outfile = sim
         if os.path.isfile(os.path.join(outdir, outfile)) and not force:
             print(f'{progname}: {os.path.join(outdir, outfile)}: file exists, use -f to overwrite.')
             sys.exit(1)
@@ -80,6 +112,10 @@ if __name__ == '__main__':
             print(f'{progname}: number of steps per decade must be > 0.')
             sys.exit(1)
 
+        if F0 <= 0:
+            print(f'{progname}: F0 must be > 0.')
+            sys.exit(1)
+
         if load_names is None:
             print(f'{progname}: you must specify the name of at least one load where the signal is injected.')
             sys.exit(1)
@@ -88,13 +124,16 @@ if __name__ == '__main__':
         F = np.logspace(fmin, fmax, N_freq)    
 
         data = np.load(data_file, allow_pickle=True)
-        SM_names = [n for n in data['gen_names']]
+        SM_names = [n for n in data['gen_names'] if n in data['H'].item().keys()]
+        if ref_SM_name is not None and ref_SM_name not in SM_names:
+            print(f'{progname}: {ref_SM_name} is not among the available synchronous machines.')
+        static_gen_names = [n for n in data['static_gen_names']] if 'static_gen_names' in data else None
         bus_names = [n for n in data['voltages'].item().keys()]
         H = np.array([data['H'].item()[name] for name in SM_names])
         S = np.array([data['S'].item()[name] for name in SM_names])
         PF = data['PF_without_slack'].item()
-        n_SMs = len(SM_names)
-        P,Q = np.zeros(n_SMs), np.zeros(n_SMs)
+        N_SMs = len(SM_names)
+        P,Q = np.zeros(N_SMs), np.zeros(N_SMs)
         for i,name in enumerate(SM_names):
             if name in PF['SMs']:
                 key = name
@@ -171,11 +210,23 @@ if __name__ == '__main__':
                         break
             if use_P_constraint:
                 # real part of voltage
-                idx.append(vars_idx[bus_name]['ur'])
+                vars_idx_keys = list(vars_idx.keys())
+                ks = [key for key in vars_idx_keys if bus_name in key]
+                if len(ks) == 1:
+                    idx.append(vars_idx[ks[0]]['ur'])
+                else:
+                    import pdb
+                    pdb.set_trace()
                 keys.append('P')
             if use_Q_constraint:
                 # imaginary part of voltage
-                idx.append(vars_idx[bus_name]['ui'])
+                vars_idx_keys = list(vars_idx.keys())
+                ks = [key for key in vars_idx_keys if bus_name in key]
+                if len(ks) == 1:
+                    idx.append(vars_idx[bus_name]['ui'])
+                else:
+                    import pdb
+                    pdb.set_trace()
                 keys.append('Q')
             for key in keys:
                 mean = PF_loads[load_name][key]
@@ -221,6 +272,46 @@ if __name__ == '__main__':
                 idx.append(v)
         var_names = [var_names[i] for i in np.argsort(idx)]
         
+        if compute_additional_TFs:
+            if ref_SM_name is None:
+                print('Please select the synchronous machine to be used as a reference:')
+                for i,SM_name in enumerate(SM_names):
+                    print('[{:2d}] {}'.format(i+1, SM_name))
+                while True:
+                    try:
+                        idx = int(input(f'Enter a number between 1 and {N_SMs}: '))
+                    except ValueError:
+                        continue
+                    if idx > 0 and idx <= N_SMs:
+                        break
+                ref_SM_name = SM_names[idx-1]
+            print(f'Will use "{ref_SM_name}" as reference.')
+            full_var_names = [name for name in var_names if ref_SM_name in name and '.speed' in name]
+            if len(full_var_names) == 1:
+                full_var_name = full_var_names[0]
+            else:
+                import pdb
+                pdb.set_trace()
+            ref_SM_idx = var_names.index(full_var_name)
+            N_buses = len(bus_names)
+            TF2 = np.zeros((TF.shape[0], TF.shape[1], N_buses), dtype=complex)
+            for i in tqdm(range(N_buses), ascii=True, ncols=70):
+                # name = bus_names[i]
+                # idx = var_names.index(name+'.ur'), var_names.index(name+'.ui')
+                ### FIX THIS IN THE POWER FLOW LABELS
+                name = bus_names[i].split('-')[-1].split('.')[0]
+                idx = var_names.index(bus_names[i]+'.ur'), var_names.index(bus_names[i]+'.ui')
+                ur,ui = PF['buses'][name]['ur'], PF['buses'][name]['ui']
+                if ur != 0:
+                    coeffs = -ui/ur**2/(1+(ui/ur)**2), 1/(ur*(1+(ui/ur)**2))
+                    TF2[:,:,i] = coeffs[0]*TF[:,:,idx[0]] + coeffs[1]*TF[:,:,idx[1]]
+                    TF2[:,:,i] *= 1j*2*np.pi*F # Δω = jωΔθ
+                    TF2[:,:,i] /= 2*np.pi*F0 # !!! scaling factor !!!
+                    TF2[:,:,i] += TF[:,:,ref_SM_idx]
+            var_names += [name+'.fe' for name in bus_names]
+            assert(len(var_names) == len(set(var_names)))
+            TF = np.concatenate((TF,TF2), axis=-1)
+            
         Htot = data['inertia']
         Etot = data['energy']
         Mtot = data['momentum']
@@ -235,17 +326,13 @@ if __name__ == '__main__':
                 var_to_save.append(var)
             else:
                 index.append(False)
-        print(len(var_names))
-        print(len(index))
-        print(TF.shape)
         TF = np.squeeze(TF)[:, :, index]
-        
-        out = {'config':data['config'],'A': A, 'F': F, 'TF': TF,
-            'var_names': var_to_save, 'SM_names': SM_names, 'bus_names': bus_names,
+        out = {'config': data['config'], 'A': A, 'F': F, 'TF': TF, 'var_names': var_names, 'SM_names': SM_names,
+            'static_gen_names': static_gen_names, 'bus_names': bus_names,
             'Htot': Htot, 'Etot': Etot, 'Mtot': Mtot, 'H': H, 'S': S, 'P': P, 'Q': Q,
-            'PF': data['PF_without_slack']}
+            'PF': data['PF_without_slack'], 'bus_equiv_terms': data['bus_equiv_terms']}
         np.savez_compressed(os.path.join(outdir, outfile), **out)
 
         if save_mat:
-            from scipy.io import savemat
-            savemat(os.path.join(outdir, os.path.splitext(outfile)[0] + '.mat'), out)
+            save_to_mat(os.path.join(outdir, os.path.splitext(outfile)[0] + '.mat'),
+                        data_dict=out)
