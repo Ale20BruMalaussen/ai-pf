@@ -45,10 +45,10 @@ if __name__ == '__main__':
 ################################################################################################################
 
     #set input and output folder
-    jacobian_folder = r"C:\Users\aless\Desktop\dataset_AI_stablepower\small_experiments\confronto_spettri_gen_OOS\simu_output"
-    outdir = r"C:\Users\aless\Desktop\dataset_AI_stablepower\small_experiments\confronto_spettri_gen_OOS\spettri"
+    jacobian_folder = r"C:\Users\aless\Desktop\dataset_AI_stablepower\small_experiments\confronto_spettri_gen_OOS_fake_CIG\simu_output"
+    outdir = r"C:\Users\aless\Desktop\dataset_AI_stablepower\small_experiments\confronto_spettri_gen_OOS_fake_CIG\spettri"
     #set name of the jacobian npz
-    jacobian_name = 'IEEE39_stoch_CIG_AC.npz' #tutti i file npz hanno questo nome
+    jacobian_name = 'IEEE39_fake_grid_forming.npz' #tutti i file npz hanno questo nome
 
         #define parameters
     #inject active or reactive power
