@@ -14,12 +14,12 @@ import subprocess
 
 ############################################################################
 #############              USER SET PATH                  ##################
-config_path = r"C:\Users\aless\Desktop\dataset_AI_stablepower\small_experiments\confronto_spettri_gen_OOS\config_file"
-outfolder_path = r"C:\Users\aless\Desktop\dataset_AI_stablepower\small_experiments\confronto_spettri_gen_OOS\simu_output"
+config_path = r"C:\Users\aless\Desktop\dataset_AI_stablepower\small_experiments\confronto_spettri_gen_OOS_fake_CIG\config_file"
+outfolder_path = r"C:\Users\aless\Desktop\dataset_AI_stablepower\small_experiments\confronto_spettri_gen_OOS_fake_CIG\simu_output"
 for config in os.listdir(config_path):
     complete_path = os.path.join(config_path, config) 
     outfile_folder = os.path.join(outfolder_path, config[:-5])
-    outfile = os.path.join(outfile_folder, 'IEEE39_stoch_CIG_AC.npz')
+    outfile = os.path.join(outfile_folder, 'IEEE39_fake_grid_forming.npz')
     if not os.path.isdir(outfile_folder):
             os.makedirs(outfile_folder)
     # Costruisce il comando completo
