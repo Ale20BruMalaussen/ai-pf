@@ -661,7 +661,7 @@ def run_tran():
     rs,seed = _get_random_state(config)
     if verbosity_level > 0: print(f'Seed: {seed}.')
 
-    PF_db_name = config['db_name'] if 'db_name' in config else 'Terna_Inerzia'
+    PF_db_name = config['db_name'] if 'db_name' in config else 'aless'
     project_name = '\\' + PF_db_name + '\\' + project_name
     project = _activate_project(project_name, verbosity_level>0)
     _print_network_info()
@@ -856,7 +856,7 @@ def run_AC_analysis():
         print(f'{progname}: output file `{outfile}` exists: use -f to overwrite.')
         sys.exit(1)
 
-    PF_db_name = config['db_name'] if 'db_name' in config else 'Terna_Inerzia'
+    PF_db_name = config['db_name'] if 'db_name' in config else 'aless'
     project_name = '\\' + PF_db_name + '\\' + config['project_name']
     project = _activate_project(project_name, verbosity_level>0)
     _print_network_info()
@@ -1041,7 +1041,7 @@ def run_AC_tran_analysis():
         print(f'{progname}: output file `{outfile}` exists: use -f to overwrite.')
         sys.exit(1)
 
-    PF_db_name = config['db_name'] if 'db_name' in config else 'Terna_Inerzia'
+    PF_db_name = config['db_name'] if 'db_name' in config else 'aless'
     project_name = '\\' + PF_db_name + '\\' + project_name
     project = _activate_project(project_name, verbosity_level>0)
     _print_network_info()
@@ -1196,7 +1196,7 @@ def run_load_step_sim():
         print(f'{progname}: output file `{outfile}` exists: use -f to overwrite.')
         sys.exit(1)
 
-    PF_db_name = config['db_name'] if 'db_name' in config else 'Terna_Inerzia'
+    PF_db_name = config['db_name'] if 'db_name' in config else 'aless'
     project_name = '\\' + PF_db_name + '\\' + config['project_name']
     project = _activate_project(project_name, verbosity_level>0)
     _print_network_info()
