@@ -6,8 +6,8 @@ import os
 import sys
 
 #set input and output folder
-simu_folder = r"C:\Users\aless\Desktop\dataset_AI_stablepower\transienti\simu_step"
-outdir = r'C:\Users\aless\Desktop\dataset_AI_stablepower\transienti\spettri_post_step'
+simu_folder = r"C:\Users\aless\Desktop\dataset_AI_stablepower\transienti\simu_no_step"
+outdir = r'C:\Users\aless\Desktop\dataset_AI_stablepower\transienti\spettri_pre_step'
 #set name of the jacobian npz
 jacobian_name = 'IEEE39_stoch_CIG_tran.npz' #tutti i file npz hanno questo nome
 
@@ -38,7 +38,7 @@ for sim in list_simulations:
         save_name = sim + '_' + str(n)+'.npz'
         T_start = T_discard + (T*n)
         time_serie = data['data'].item()['gen']['s:xspeed'][T_start*fs: (T_start+T)*fs,:]
-        f_tot, PSD_tot = welch(time_serie, axis = 0, scaling = 'density', fs = 1/dt, nperseg = fs*T,  window = window_type, noverlap =overlap_seconds, average = average_type)
+        f_tot, PSD_tot = welch(time_serie, axis = 0, scaling = 'density', fs = 1/dt, nperseg = fs*window_time,  window = window_type, noverlap =overlap_seconds, average = average_type)
         F = f_tot[(f_tot>=fmin) & (f_tot<fmax)]
         N_freq = len(F)
         TF = PSD_tot[(f_tot>=fmin) & (f_tot<fmax), :]

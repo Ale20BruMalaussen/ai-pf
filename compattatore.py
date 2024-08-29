@@ -1,7 +1,7 @@
 
 import numpy as np
 import os
-directory = 'C:\Users\aless\Desktop\dataset_AI_stablepower\transienti'
+directory = r'C:\Users\aless\Desktop\dataset_AI_stablepower\transienti'
 folders_spettri = ['spettri_pre_step', 'spettri_post_step']
 nome_jaco = 'IEEE 39 fake grid forming_AC.npz'
 n_channel = 2 #pre and post step
@@ -28,21 +28,23 @@ for i, (path_pre_step, path_post_step) in enumerate(zip(path_list_pre_step, path
     print(i)
     data_pre_step = np.load(path_pre_step, allow_pickle = True)
     data_post_step = np.load(path_post_step, allow_pickle = True)
-    tf[i,0, :, :]= np.sum(data_pre_step['TF'], axis = 0).transpose() 
-    tf[i, 1, :,:] = np.sum(data_post_step['TF'], axis = 0).transpose()
+    tf[i,0, :, :]= data_pre_step['TF'].transpose()
+    tf[i, 1, :,:] = data_post_step['TF'].transpose()
+    # tf[i,0, :, :]= np.sum(data_pre_step['TF'], axis = 0).transpose() 
+    # tf[i, 1, :,:] = np.sum(data_post_step['TF'], axis = 0).transpose()
     Mtot_array[i] = data_pre_step['Mtot']
-    Ta_no_step =[]
-    Ta_step = []
-    for k in data_pre_step['config'].item()['CIG'].keys():
-        nested_k = list(data_pre_step['config'].item()['CIG'][k].keys())
+    # Ta_no_step =[]
+    # Ta_step = []
+    # for k in data_pre_step['config'].item()['CIG'].keys():
+    #     nested_k = list(data_pre_step['config'].item()['CIG'][k].keys())
         
-        Ta_no_step.append(data_pre_step['config'].item()['CIG'][k][nested_k[0]]['Ta'])
-        Ta_step.append(data_post_step['config'].item()['CIG'][k][nested_k[0]]['Ta'])
-    step_array[i] = np.sum(np.array(Ta_step)-np.array(Ta_no_step))
-    #step_array[i] = data_step['Mtot']- data_no_step['Mtot']
+    #     Ta_no_step.append(data_pre_step['config'].item()['CIG'][k][nested_k[0]]['Ta'])
+    #     Ta_step.append(data_post_step['config'].item()['CIG'][k][nested_k[0]]['Ta'])
+    # step_array[i] = np.sum(np.array(Ta_step)-np.array(Ta_no_step))
+    step_array[i] = 500
 
 
 dataset = {'TF': tf, 'step': step_array, 'Mtot':Mtot_array}
-np.savez_compressed('C:\\Users\\aless\\Desktop\\simu_transient\\spettri_noise_small_signal_analysis', **dataset)
+np.savez_compressed(r'C:\Users\aless\Desktop\dataset_AI_stablepower\transienti\spettri_simu_time.npz', **dataset)
 
 
